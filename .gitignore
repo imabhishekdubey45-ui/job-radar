@@ -1,0 +1,8 @@
+# Keep personal contact details, PDFs, resumes, and local status private (never push to GitHub)
+resumes/
+ready_for_phone/
+*.pdf
+data/tracker_state.json
+__pycache__/
+*.py[cod]
+.venv/

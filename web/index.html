@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#4f46e5" />
+  <title>Job Radar — Ops &amp; AI Workflows</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" href="./icon-192.png" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-badge">JR</div>
+        <div>
+          <h1>Abhishek Job Radar</h1>
+          <p class="subtitle">Interview-Safe Matches &bull; ₹9L+ Floor &bull; 60d Notice</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span id="modeBadge" class="pill pill-indigo">Live Mode</span>
+        <button id="exportCsvBtn" class="btn btn-outline" type="button">Export CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- KPI Strip -->
+    <section class="kpi-grid" aria-label="Pipeline metrics">
+      <article class="kpi-card">
+        <span class="kpi-label">Active Matches</span>
+        <strong class="kpi-val" id="kpiTotal">0</strong>
+        <span class="kpi-sub">Deduplicated across portals</span>
+      </article>
+      <article class="kpi-card kpi-accent">
+        <span class="kpi-label">Interview-Safe &amp; High Fit</span>
+        <strong class="kpi-val" id="kpiSafeFit">0</strong>
+        <span class="kpi-sub">LOW risk &amp; score &ge; 65</span>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-label">Remote / Sponsored</span>
+        <strong class="kpi-val" id="kpiRemote">0</strong>
+        <span class="kpi-sub">Global, India WFH, Relocation</span>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-label">Shortlisted / Applied</span>
+        <strong class="kpi-val" id="kpiPipeline">0</strong>
+        <span class="kpi-sub">Tracked across 60d notice</span>
+      </article>
+    </section>
+
+    <!-- Tab: Matches -->
+    <section id="tab-jobs" class="tab-panel active">
+      <div class="filters-card">
+        <div class="search-row">
+          <input id="searchInput" type="search" placeholder="Search title, company, skills (e.g. Operations, Remote, AdTech)..." />
+        </div>
+        <div class="filter-row">
+          <select id="filterSource">
+            <option value="all">All Portals</option>
+            <option value="naukri">Naukri</option>
+            <option value="wellfound">Wellfound</option>
+            <option value="instahyre">Instahyre</option>
+            <option value="himalayas">Himalayas</option>
+            <option value="arbeitnow">Arbeitnow</option>
+            <option value="jobicy">Jobicy</option>
+            <option value="glassdoor">Glassdoor</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="web">Web</option>
+          </select>
+          <select id="filterLocation">
+            <option value="all">All Locations</option>
+            <option value="Remote-Global">Remote (Global)</option>
+            <option value="Remote-India">Remote (India)</option>
+            <option value="India-Onsite/Hybrid">India Hub / Hybrid</option>
+            <option value="Overseas-Sponsored">Overseas (Sponsored)</option>
+          </select>
+          <select id="filterRisk">
+            <option value="safe">Low Risk Only (Recommended)</option>
+            <option value="low_med">Low + Medium Risk</option>
+            <option value="all">All Risk Levels</option>
+          </select>
+          <select id="filterTrack">
+            <option value="all">All Resume Tracks</option>
+            <option value="Track A">Track A (AI Operations)</option>
+            <option value="Track B">Track B (Ops Excellence)</option>
+          </select>
+          <select id="filterStatus">
+            <option value="active">Hide Skipped</option>
+            <option value="all">All Statuses</option>
+            <option value="shortlisted">Shortlisted</option>
+            <option value="applied">Applied</option>
+            <option value="interviewing">Interviewing</option>
+            <option value="new">New Only</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="split-layout">
+        <div id="jobList" class="job-list" aria-live="polite"></div>
+        <aside id="detailPane" class="detail-pane">
+          <div class="detail-empty">
+            <h3>Select any job card</h3>
+            <p>View Fit Score breakdown, Interview-Safety checks, which 2-page PDF resume to upload, matched Ergode/TTEC proof points, and 1-tap outreach pitch.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Tab: Evaluate JD -->
+    <section id="tab-evaluate" class="tab-panel">
+      <div class="card eval-card">
+        <h2>Evaluate Any New Job Posting</h2>
+        <p class="muted">Paste a job description from LinkedIn, Naukri, or Wellfound on your phone to test Fit Score, Interview Risk (SQL/coding traps), 60-day notice fit, and which PDF resume to send.</p>
+        <div class="form-grid">
+          <label>
+            Job Title
+            <input id="evalTitle" type="text" placeholder="e.g. AI Operations & Workflow Specialist" />
+          </label>
+          <label>
+            Company
+            <input id="evalCompany" type="text" placeholder="e.g. Acme SaaS" />
+          </label>
+          <label>
+            Location / Work Mode
+            <input id="evalLocation" type="text" placeholder="e.g. Remote India / Bengaluru / Dubai Visa Sponsored" />
+          </label>
+          <label>
+            Salary (if shown)
+            <input id="evalSalary" type="text" placeholder="e.g. 12-16 LPA or $30,000/yr" />
+          </label>
+        </div>
+        <label class="full-label">
+          Job Description / Skills Text
+          <textarea id="evalDesc" rows="7" placeholder="Paste full job description here..."></textarea>
+        </label>
+        <div class="eval-actions">
+          <button id="evalRunBtn" class="btn btn-primary" type="button">Check Fit &amp; Interview Safety</button>
+          <button id="evalSaveBtn" class="btn btn-outline" type="button">Evaluate &amp; Add to List</button>
+          <button id="evalDemoAcmeBtn" class="btn btn-ghost" type="button">Test Bad Match (Acme Demo)</button>
+        </div>
+        <div id="evalResult" class="eval-result"></div>
+      </div>
+    </section>
+
+    <!-- Tab: Profile Copy (Mobile Cheat Sheet) -->
+    <section id="tab-profiles" class="tab-panel">
+      <div class="card">
+        <h2>Mobile Profile Update &amp; Interview Cheat Sheet</h2>
+        <p class="muted">Tap any <strong>Copy</strong> button to paste directly into LinkedIn, Naukri, Wellfound, Instahyre, Glassdoor, Indeed, or Foundit from your phone.</p>
+        <div id="profileSnippets" class="snippet-grid"></div>
+      </div>
+    </section>
+
+    <!-- Tab: Sync / Resumes / Export -->
+    <section id="tab-sync" class="tab-panel">
+      <div class="card">
+        <h2>Resumes, Vivo 5G Access &amp; Backups</h2>
+        <div class="sync-grid">
+          <div class="sync-box">
+            <h3>1. Auto-Refresh &amp; GitHub Phone Trigger</h3>
+            <p class="muted" id="refreshMetaText">Loading update status...</p>
+            <div class="btn-group" style="margin-bottom:8px;">
+              <button id="pullLatestBtn" class="btn btn-primary btn-sm" type="button">Pull Latest Feed Now</button>
+              <button id="openGhActionBtn" class="btn btn-outline btn-sm" type="button">Open GitHub Refresh</button>
+            </div>
+            <label style="font-size:0.76rem;">
+              Your GitHub Repo (for 1-tap mobile trigger, e.g. <code>username/job-radar</code>)
+              <input id="ghRepoInput" type="text" placeholder="your-username/job-radar" />
+            </label>
+          </div>
+          <div class="sync-box">
+            <h3>2. Resumes (Private on Phone / PC)</h3>
+            <p class="muted">Keep your 2 PDFs privately on your phone Downloads (never hosted publicly on GitHub Pages).</p>
+            <div class="btn-group" id="pdfDownloadGroup">
+              <a class="btn btn-primary" href="./resumes/Abhishek_Dubey_AI_Operations_Workflow_Specialist.pdf" target="_blank" rel="noopener">Track A PDF (AI Ops)</a>
+              <a class="btn btn-outline" href="./resumes/Abhishek_Dubey_Operations_Process_Excellence_Specialist.pdf" target="_blank" rel="noopener">Track B PDF (Ops Excellence)</a>
+            </div>
+          </div>
+          <div class="sync-box" id="lanBoxContainer">
+            <h3>3. Local Server URL</h3>
+            <p class="muted">Active local address when running <code>server.py</code>:</p>
+            <code id="lanUrlBox" class="code-pill">Checking mode...</code>
+          </div>
+          <div class="sync-box">
+            <h3>4. Daily Live Search Links (Tap on Phone)</h3>
+            <p class="muted">Tap these pre-filtered links daily on your phone to browse fresh postings, then copy-paste any JD into <strong>Evaluate JD</strong>:</p>
+            <div class="btn-group">
+              <a class="btn btn-outline btn-sm" href="https://www.naukri.com/process-improvement-operations-jobs?experience=4&amp;wfhType=2" target="_blank" rel="noopener">Naukri Remote Ops</a>
+              <a class="btn btn-outline btn-sm" href="https://www.naukri.com/ecommerce-operations-jobs?experience=4" target="_blank" rel="noopener">Naukri E-Comm Ops</a>
+              <a class="btn btn-outline btn-sm" href="https://www.linkedin.com/jobs/search/?keywords=Operations%20Process%20Improvement%20AI%20Workflow&amp;f_WT=2" target="_blank" rel="noopener">LinkedIn Remote</a>
+              <a class="btn btn-outline btn-sm" href="https://wellfound.com/jobs" target="_blank" rel="noopener">Wellfound Startups</a>
+              <a class="btn btn-outline btn-sm" href="https://www.instahyre.com/search-jobs" target="_blank" rel="noopener">Instahyre Ops</a>
+            </div>
+          </div>
+          <div class="sync-box">
+            <h3>5. Export / Backup Tracker State</h3>
+            <p class="muted">Export your shortlisted/applied jobs anytime as CSV or JSON backup.</p>
+            <div class="btn-group">
+              <button id="syncCsvBtn" class="btn btn-primary" type="button">Download CSV</button>
+              <button id="backupJsonBtn" class="btn btn-outline" type="button">Backup Status JSON</button>
+              <label class="btn btn-ghost file-btn">
+                Restore JSON
+                <input id="restoreJsonInput" type="file" accept="application/json" hidden />
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mobile Detail Sheet Modal -->
+  <div id="mobileSheetBackdrop" class="sheet-backdrop" hidden>
+    <div class="mobile-sheet" role="dialog" aria-modal="true">
+      <div class="sheet-header">
+        <span>Match Inspector</span>
+        <button id="closeSheetBtn" class="btn btn-ghost" type="button">&times; Close</button>
+      </div>
+      <div id="mobileSheetBody"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Tab Navigation (Mobile + Desktop Quick Switcher) -->
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <button class="nav-btn active" data-tab="jobs" type="button">
+      <span class="nav-icon">&#128188;</span>
+      <span>Matches</span>
+    </button>
+    <button class="nav-btn" data-tab="evaluate" type="button">
+      <span class="nav-icon">&#9889;</span>
+      <span>Evaluate JD</span>
+    </button>
+    <button class="nav-btn" data-tab="profiles" type="button">
+      <span class="nav-icon">&#128203;</span>
+      <span>Profile Copy</span>
+    </button>
+    <button class="nav-btn" data-tab="sync" type="button">
+      <span class="nav-icon">&#128241;</span>
+      <span>Phone &amp; PDFs</span>
+    </button>
+  </nav>
+
+  <div id="toast" class="toast" hidden>Copied!</div>
+
+  <!-- Embedded payload placeholder populated when building standalone offline bundle -->
+  <script id="embedded-data" type="application/json">null</script>
+  <script src="./app.js"></script>
+</body>
+</html>

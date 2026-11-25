@@ -1,0 +1,128 @@
+{
+  "candidate": {
+    "name": "Abhishek Dubey",
+    "location": "Ahmedabad, India",
+    "experience_years": 4.2,
+    "current_ctc_lpa": 6.2,
+    "floor_ctc_lpa": 9.0,
+    "target_ctc_lpa": "10-16+",
+    "target_usd_remote": "$22K-$45K+",
+    "notice_period_days": 60,
+    "preferred_locations": ["remote", "india", "sponsored"]
+  },
+  "tracks": {
+    "track_a": {
+      "label": "Track A (AI Operations & Workflows)",
+      "pdf_filename": "Abhishek_Dubey_AI_Operations_Workflow_Specialist.pdf",
+      "boost_keywords": [
+        "ai operations", "ai workflow", "ai automation", "claude", "llm", "prompt",
+        "no-code", "low-code", "zapier", "make", "n8n", "automation", "workflow",
+        "founder's office", "founders office", "product operations", "revops",
+        "revenue operations", "implementation", "monday.com", "airtable", "notion",
+        "saas", "enablement", "internal tools", "prototyping", "ai agent"
+      ]
+    },
+    "track_b": {
+      "label": "Track B (Operations & Process Excellence)",
+      "pdf_filename": "Abhishek_Dubey_Operations_Process_Excellence_Specialist.pdf",
+      "boost_keywords": [
+        "operations excellence", "process improvement", "process excellence",
+        "business operations", "operations analyst", "operations lead",
+        "sop", "sla", "variance", "reconciliation", "vendor onboarding",
+        "marketplace", "e-commerce", "ecommerce", "catalog", "amazon",
+        "adtech", "advertising", "campaign operations", "root cause",
+        "stakeholder", "change management", "continuous improvement", "lean", "six sigma"
+      ]
+    }
+  },
+  "scoring_weights": {
+    "operations_process": 35,
+    "ai_workflow_automation": 25,
+    "domain_ecommerce_adtech": 20,
+    "logistics_location_notice": 20
+  },
+  "keyword_groups": {
+    "operations_process": [
+      "operations", "process improvement", "process excellence", "business operations",
+      "workflow", "sop", "sla", "root cause", "variance", "reconciliation",
+      "continuous improvement", "bottleneck", "kpi", "dashboard", "excel",
+      "vlookup", "index-match", "vendor", "onboarding", "stakeholder",
+      "change management", "cross-functional", "intake", "taxonomy", "migration",
+      "project coordination", "program management", "implementation", "founder's office"
+    ],
+    "ai_workflow_automation": [
+      "ai", "claude", "llm", "prompt", "automation", "workflow automation",
+      "no-code", "low-code", "zapier", "make", "n8n", "monday.com", "salesforce",
+      "crm", "api", "matching", "data management", "quality assurance", "macros",
+      "enablement", "internal tools", "ai operations"
+    ],
+    "domain_ecommerce_adtech": [
+      "e-commerce", "ecommerce", "marketplace", "amazon", "catalog", "pricing",
+      "inventory", "adtech", "advertising", "campaign", "creator", "affiliate",
+      "saas", "b2b", "client solutions", "revenue operations", "revops", "product operations"
+    ]
+  },
+  "hard_reject_keywords": [
+    "ts/sci", "security clearance", "vxlan", "evpn", "ccie", "bgp", "ospf",
+    "spanning tree", "network engineer", "sales engineer", "cold calling",
+    "door to door", "field sales", "telecaller", "civil engineer", "mechanical engineer",
+    "nurse", "mbbs", "chartered accountant", "ca qualified", "sap abap", "java developer",
+    "full stack developer", "react developer", "kubernetes", "terraform", "c++ developer"
+  ],
+  "interview_risk_rules": {
+    "high_risk": [
+      { "term": "write complex sql", "reason": "Requires live SQL authoring" },
+      { "term": "window functions", "reason": "Requires advanced SQL coding" },
+      { "term": "python developer", "reason": "Expects software engineering in Python" },
+      { "term": "coding interview", "reason": "Includes live technical coding test" },
+      { "term": "dsa", "reason": "Requires data structures & algorithms test" },
+      { "term": "leetcode", "reason": "Requires algorithmic coding test" },
+      { "term": "babok", "reason": "Tests formal BABOK BA methodology" },
+      { "term": "cbap", "reason": "Requires certified formal BA credentials" },
+      { "term": "uml diagram", "reason": "Tests formal UML modeling" },
+      { "term": "bpmn", "reason": "May test formal BPMN notation" },
+      { "term": "software architecture", "reason": "Expects engineering system design" }
+    ],
+    "medium_risk": [
+      { "term": "sql", "reason": "Mentions SQL (verify if reporting-only or live coding)" },
+      { "term": "python", "reason": "Mentions Python (clarify AI-assisted vs hand-coded)" },
+      { "term": "brd", "reason": "Mentions BRD (confirm informal scoping vs formal template)" },
+      { "term": "frd", "reason": "Mentions FRD (confirm practical scoping vs formal spec)" },
+      { "term": "uat", "reason": "Mentions UAT (frame as stakeholder validation coordination)" },
+      { "term": "power bi", "reason": "Mentions Power BI (verify depth expected)" },
+      { "term": "tableau", "reason": "Mentions Tableau (verify depth expected)" }
+    ]
+  },
+  "immediate_joiner_patterns": [
+    "immediate joiner", "immediate joining", "join immediately",
+    "0-15 days", "0 to 15 days", "max 15 days", "within 15 days",
+    "notice period: immediate", "15 days notice"
+  ],
+  "proof_point_library": [
+    {
+      "id": "leonidas_500h",
+      "triggers": ["automation", "manual", "bottleneck", "vlookup", "excel", "process improvement", "operations", "it team", "efficiency"],
+      "story": "Ergode (Leonidas Award 2024): Spotted daily manual bottleneck across 40+ price lists (20-person team), mapped workflow & partnered with IT to automate—saving 500+ manual hrs/month."
+    },
+    {
+      "id": "variance_31k",
+      "triggers": ["variance", "reconciliation", "pricing", "cost", "inventory", "audit", "amazon", "vendor", "root cause", "leakage"],
+      "story": "Ergode Variance & Recovery: Cut monthly rate variance from $31K to $2.8K across 40+ brand feeds and recovered $20K in stranded Amazon inventory."
+    },
+    {
+      "id": "intake_sla_50",
+      "triggers": ["intake", "sla", "taxonomy", "sop", "onboarding", "launch", "turnaround", "tat", "stakeholder", "eu", "apac", "us"],
+      "story": "TTEC / Rakuten Launch SLA: Analyzed 300+ historical projects, built 15-category taxonomy + guided self-service intake in 1 month—cutting launch SLA by up to 50% (5 to 2-3 days)."
+    },
+    {
+      "id": "creator_matching_50k",
+      "triggers": ["matching", "data management", "catalog", "classification", "ai", "claude", "workflow", "quality assurance", "50k", "marketplace"],
+      "story": "TTEC 50K Creator Matching Workflow: Designed 5-tier confidence/ambiguity rules and shipped an AI-assisted matching tool (Claude & Antigravity) reconciling 50,000+ records in 4-5 days."
+    },
+    {
+      "id": "monday_kpi_ai_training",
+      "triggers": ["monday.com", "kpi", "dashboard", "migration", "prompt", "ai enablement", "training", "aht", "enablement", "change management"],
+      "story": "TTEC KPI & AI Enablement: Launched Monday.com KPI tracker for AHT/throughput visibility, supported Rakuten->Impact migration, and trained teammates on AI-assisted prompt workflows."
+    }
+  ]
+}

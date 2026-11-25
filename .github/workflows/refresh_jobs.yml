@@ -1,0 +1,76 @@
+name: Refresh Jobs & Deploy Mobile PWA
+
+on:
+  schedule:
+    # Runs daily at 08:00 AM IST (02:30 UTC)
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+    inputs:
+      note:
+        description: "Optional manual refresh label"
+        required: false
+        default: "Mobile manual refresh"
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  refresh-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch live remote & visa-sponsored jobs
+        run: python fetch_jobs.py
+
+      - name: Build GitHub Pages PWA and standalone bundle
+        run: python build_pages_site.py
+
+      - name: Run automated unit tests
+        run: python -m unittest tests/test_scorer.py tests/test_fetcher.py tests/test_server_and_bundle.py -v
+
+      - name: Commit updated job feed back to main
+        run: |
+          git config user.name "job-radar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/jobs_raw.json data/jobs_meta.json docs/ dist/job_radar_mobile.html
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: refresh job feed [skip ci]"
+            git push
+          else
+            echo "No job feed changes to commit."
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: refresh-and-build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
