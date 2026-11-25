@@ -1,10 +1,12 @@
 {
-  "last_refreshed_utc": "2026-11-25 14:30 UTC",
-  "last_refreshed_ist": "25 Nov 2026, 08:00 PM IST",
-  "total_jobs": 26,
-  "live_fetched_count": 0,
+  "last_refreshed_utc": "2026-11-25 14:47 UTC",
+  "last_refreshed_ist": "25 Nov 2026, 08:17 PM IST",
+  "total_jobs": 65,
+  "live_fetched_count": 250,
   "seed_count": 26,
   "source_status": {
-    "curated_browser": "ok (26 verified listings)"
+    "arbeitnow": "ok (216/600 relevant)",
+    "himalayas": "ok (2/2 relevant)",
+    "jobicy": "ok (32/50 relevant)"
   }
 }
