@@ -47,11 +47,11 @@ class FetcherAndPagesTestCase(unittest.TestCase):
                 {
                     "slug": "german-only-dev",
                     "company_name": "Berlin GmbH",
-                    "title": "Softwareentwickler Python",
-                    "description": "<p>Wir suchen einen Entwickler mit Python Erfahrung.</p>",
+                    "title": "Operations & Process Lead",
+                    "description": "<p>Wir suchen eine erfahrene Person fuer Prozesse und Automatisierung mit visa sponsorship.</p>",
                     "remote": False,
                     "location": "Berlin",
-                    "tags": ["Python"],
+                    "tags": ["Operations"],
                     "url": "https://arbeitnow.example/de-dev",
                 },
             ]
@@ -62,7 +62,7 @@ class FetcherAndPagesTestCase(unittest.TestCase):
         self.assertEqual(len(kept), 1)
         self.assertEqual(kept[0]["company"], "EuroScale GmbH")
 
-    def test_normalize_himalayas_filters_us_only_keeps_worldwide(self) -> None:
+    def test_normalize_himalayas_filters_single_country_keeps_worldwide(self) -> None:
         payload = {
             "jobs": [
                 {
@@ -81,6 +81,13 @@ class FetcherAndPagesTestCase(unittest.TestCase):
                     "description": "<p>Manage operations and SLA processes for US teams.</p>",
                     "locationRestrictions": ["United States"],
                     "applicationLink": "https://himalayas.example/us-only",
+                },
+                {
+                    "title": "Influencer Operations Specialist",
+                    "companyName": "LocalID",
+                    "description": "<p>Operations for local market.</p>",
+                    "locationRestrictions": ["Indonesia"],
+                    "applicationLink": "https://himalayas.example/id-only",
                 },
             ]
         }
@@ -116,6 +123,28 @@ class FetcherAndPagesTestCase(unittest.TestCase):
         norm = normalize_jobicy(payload)
         self.assertEqual(len(norm), 1)
         self.assertEqual(norm[0]["title"], "Process Improvement & RevOps Lead")
+
+        usa_plain = {
+            "jobs": [
+                {
+                    "id": 103,
+                    "jobTitle": "Operations Director",
+                    "companyName": "USCorp",
+                    "jobGeo": "USA",
+                    "jobDescription": "<p>Operations and automation workflows.</p>",
+                    "url": "https://jobicy.example/103",
+                },
+                {
+                    "id": 104,
+                    "jobTitle": "Operations Manager",
+                    "companyName": "LatamCorp",
+                    "jobGeo": "Mexico",
+                    "jobDescription": "<p>Operations and automation workflows.</p>",
+                    "url": "https://jobicy.example/104",
+                },
+            ]
+        }
+        self.assertEqual(normalize_jobicy(usa_plain), [])
 
     def test_fetch_all_sources_handles_partial_api_failure(self) -> None:
         himalayas_ok = {

@@ -21,17 +21,20 @@ RAW_FILE = DATA_DIR / "jobs_raw.json"
 META_FILE = DATA_DIR / "jobs_meta.json"
 
 ARBEITNOW_URL = "https://www.arbeitnow.com/api/job-board-api?page={page}"
-HIMALAYAS_URL = "https://himalayas.app/jobs/api?limit=50"
-JOBICY_URL = "https://jobicy.com/api/v2/remote-jobs?count=50"
+HIMALAYAS_URLS = (
+    "https://himalayas.app/jobs/api/search?q=operations&worldwide=true",
+    "https://himalayas.app/jobs/api/search?q=process+improvement&worldwide=true",
+    "https://himalayas.app/jobs/api/search?q=workflow+automation&worldwide=true",
+    "https://himalayas.app/jobs/api?limit=50",
+)
+JOBICY_URLS = (
+    "https://jobicy.com/api/v2/remote-jobs?count=50&geo=anywhere",
+    "https://jobicy.com/api/v2/remote-jobs?count=50&geo=apac",
+)
 
 USER_AGENT = "JobRadarBot/1.0 (+https://github.com)"
 
-# Explicit single-country/region restrictions excluding India-based remote candidates
-DISALLOWED_REMOTE_GEOS = (
-    "usa only", "us only", "united states only", "uk only", "canada only",
-    "latam only", "brazil only", "americas only", "north america only",
-    "europe only", "eu only", "germany only", "australia only",
-)
+ELIGIBLE_GEO_TOKENS = ("worldwide", "anywhere", "global", "india", "apac", "asia", "all regions")
 
 
 def strip_html(raw_html: str | None) -> str:
@@ -51,21 +54,16 @@ def _http_get_json(url: str, timeout: int = 20) -> Any:
         return json.loads(resp.read().decode(charset, errors="replace"))
 
 
-def _is_geo_eligible(geo_text: str, restrictions: list[str] | None = None, is_visa_or_eu: bool = False) -> bool:
-    """Filter out remote listings restricted exclusively to US/Canada/UK-only applicants."""
-    combined = f"{geo_text} {' '.join(restrictions or [])}".lower().strip()
-    if not combined:
+def _is_geo_eligible(geo_text: str, restrictions: list[str] | None = None, has_visa_sponsor: bool = False) -> bool:
+    """Allowload only Worldwide/Anywhere/Global/India/APAC remote roles or explicit visa sponsorship."""
+    if has_visa_sponsor:
         return True
-    if any(pat in combined for pat in DISALLOWED_REMOTE_GEOS):
-        return False
+    tokens = [t.strip().lower() for t in re.split(r"[,;/|]+", geo_text or "") if t.strip()]
     if restrictions:
-        norm = [r.strip().lower() for r in restrictions if r and r.strip()]
-        allowed_anywhere = any(k in norm for k in ("worldwide", "anywhere", "global", "india", "remote"))
-        if norm and not allowed_anywhere and not is_visa_or_eu:
-            # e.g. ["United States"] or ["US"]
-            if all(r in ("us", "usa", "united states", "canada", "uk", "united kingdom") for r in norm):
-                return False
-    return True
+        tokens.extend(r.strip().lower() for r in restrictions if r and r.strip())
+    if not tokens:
+        return True
+    return any(allowed in tok for tok in tokens for allowed in ELIGIBLE_GEO_TOKENS)
 
 
 def normalize_arbeitnow(payload: dict[str, Any]) -> list[dict[str, Any]]:
@@ -86,10 +84,17 @@ def normalize_arbeitnow(payload: dict[str, Any]) -> list[dict[str, Any]]:
         tags = [str(t) for t in (item.get("tags") or []) if t]
         loc = str(item.get("location") or "Europe").strip()
         is_remote = bool(item.get("remote"))
-        work_mode = "Remote" if is_remote else "Onsite / Relocation"
-        # Tag Arbeitnow European roles clearly for visa/relocation vs remote filtering
-        if not is_remote and "visa" not in desc.lower() and "relocation" not in desc.lower():
-            desc = f"{desc} (Location: {loc}, Europe — check visa sponsorship eligibility)."
+        desc_lower = desc.lower()
+        has_visa = any(
+            k in desc_lower for k in ("visa sponsor", "visa support", "relocation package", "relocation support", "work permit")
+        )
+        has_global_remote = is_remote and any(
+            k in desc_lower for k in ("worldwide", "anywhere", "global", "work from anywhere", "india")
+        )
+        # Skip local European roles that neither sponsor visas nor hire globally remote
+        if not has_visa and not has_global_remote:
+            continue
+        work_mode = "Remote" if has_global_remote else "Overseas Visa-Sponsored"
         out.append(
             {
                 "job_id": f"arbeitnow_{item.get('slug') or abs(hash(url)) % 10**8}",
@@ -210,20 +215,32 @@ def _looks_english(text: str) -> bool:
     return sum(1 for m in english_markers if m in lowered) >= 2
 
 
-def filter_relevant_live_jobs(candidates: list[dict[str, Any]], config: dict[str, Any], min_score: float = 42.0) -> list[dict[str, Any]]:
-    """Keep only interview-safe, English-language, operations/AI-relevant live API matches."""
+def _title_matches_target(title: str, config: dict[str, Any]) -> bool:
+    title_lower = title.lower()
+    allow = config.get("title_allow_terms", [])
+    return any(
+        bool(re.search(rf"\b{re.escape(t)}\b", title_lower)) if len(t) <= 4 and t.isalpha() else t in title_lower
+        for t in allow
+    )
+
+
+def filter_relevant_live_jobs(candidates: list[dict[str, Any]], config: dict[str, Any], min_score: float = 55.0) -> list[dict[str, Any]]:
+    """Keep only English, title-matched, interview-safe, high-fit live API matches."""
     kept: list[dict[str, Any]] = []
     for raw in candidates:
-        if not _looks_english(f"{raw.get('title', '')} {raw.get('description', '')}"):
+        title = str(raw.get("title") or "")
+        desc = str(raw.get("description") or "")
+        if not _looks_english(f"{title} {desc}"):
+            continue
+        if not _title_matches_target(title, config):
             continue
         ev = evaluate_job(raw, config)
         if ev.rejected_reason:
             continue
         if ev.interview_risk == "HIGH":
             continue
-        # Require substantive operations/process/AI/domain keyword match rather than pure logistics points
         core_pts = ev.fit_breakdown.get("operations_process", 0) + ev.fit_breakdown.get("ai_workflow_automation", 0)
-        if core_pts < 12.0:
+        if core_pts < 14.0:
             continue
         if ev.fit_score >= min_score:
             kept.append(raw)
@@ -236,38 +253,60 @@ def fetch_all_sources(config: dict[str, Any]) -> tuple[list[dict[str, Any]], dic
     collected: list[dict[str, Any]] = []
 
     try:
-        a1 = _http_get_json(ARBEITNOW_URL.format(page=1))
-        a2 = _http_get_json(ARBEITNOW_URL.format(page=2))
-        norm = normalize_arbeitnow(a1) + normalize_arbeitnow(a2)
+        norm = []
+        for page_num in (1, 2, 3):
+            norm.extend(normalize_arbeitnow(_http_get_json(ARBEITNOW_URL.format(page=page_num))))
         kept = filter_relevant_live_jobs(norm, config)
         collected.extend(kept)
         status_log["arbeitnow"] = f"ok ({len(kept)}/{len(norm)} relevant)"
     except Exception as exc:
         status_log["arbeitnow"] = f"skipped ({exc})"
 
-    try:
-        him = _http_get_json(HIMALAYAS_URL)
-        norm = normalize_himalayas(him)
-        kept = filter_relevant_live_jobs(norm, config)
+    him_norm: list[dict[str, Any]] = []
+    him_errors: list[str] = []
+    for h_url in HIMALAYAS_URLS:
+        try:
+            him_norm.extend(normalize_himalayas(_http_get_json(h_url)))
+        except Exception as exc:
+            him_errors.append(str(exc))
+    if him_norm:
+        kept = filter_relevant_live_jobs(him_norm, config)
         collected.extend(kept)
-        status_log["himalayas"] = f"ok ({len(kept)}/{len(norm)} relevant)"
-    except Exception as exc:
-        status_log["himalayas"] = f"skipped ({exc})"
+        status_log["himalayas"] = f"ok ({len(kept)}/{len(him_norm)} relevant)"
+    else:
+        status_log["himalayas"] = f"skipped ({'; '.join(him_errors[:1]) or 'no data'})"
 
-    try:
-        jcy = _http_get_json(JOBICY_URL)
-        norm = normalize_jobicy(jcy)
-        kept = filter_relevant_live_jobs(norm, config)
+    jcy_norm: list[dict[str, Any]] = []
+    jcy_errors: list[str] = []
+    for j_url in JOBICY_URLS:
+        try:
+            jcy_norm.extend(normalize_jobicy(_http_get_json(j_url)))
+        except Exception as exc:
+            jcy_errors.append(str(exc))
+    if jcy_norm:
+        kept = filter_relevant_live_jobs(jcy_norm, config)
         collected.extend(kept)
-        status_log["jobicy"] = f"ok ({len(kept)}/{len(norm)} relevant)"
-    except Exception as exc:
-        status_log["jobicy"] = f"skipped ({exc})"
+        status_log["jobicy"] = f"ok ({len(kept)}/{len(jcy_norm)} relevant)"
+    else:
+        status_log["jobicy"] = f"skipped ({'; '.join(jcy_errors[:1]) or 'no data'})"
 
-    return collected, status_log
+    # Deduplicate across overlapping search queries (e.g. multiple Himalayas queries)
+    deduped: list[dict[str, Any]] = []
+    seen_keys: set[tuple[str, str]] = set()
+    for item in collected:
+        key = (
+            re.sub(r"[^a-z0-9]", "", str(item.get("company") or "").lower()),
+            re.sub(r"[^a-z0-9]", "", str(item.get("title") or "").lower()),
+        )
+        if key not in seen_keys:
+            seen_keys.add(key)
+            deduped.append(item)
+
+    return deduped, status_log
 
 
-def merge_and_save(live_jobs: list[dict[str, Any]], status_log: dict[str, str], max_total: int = 65) -> dict[str, Any]:
-    """Merge curated seed jobs with live API discoveries, deduplicate, and save."""
+def merge_and_save(live_jobs: list[dict[str, Any]], status_log: dict[str, str], max_live_api: int = 25) -> dict[str, Any]:
+    """Always preserve curated seed jobs and merge top-scored live API matches."""
     config = load_config(ROOT / "profile_config.json")
     seed_jobs: list[dict[str, Any]] = []
     if SEED_FILE.exists():
@@ -275,11 +314,15 @@ def merge_and_save(live_jobs: list[dict[str, Any]], status_log: dict[str, str], 
     elif RAW_FILE.exists():
         seed_jobs = json.loads(RAW_FILE.read_text(encoding="utf-8"))
 
-    combined_raw = live_jobs + seed_jobs
-    scored = deduplicate_and_score(combined_raw, config)
+    # Rank live API candidates first and keep top max_live_api so seed jobs are never evicted
+    scored_live = deduplicate_and_score(live_jobs, config)
+    top_live_ids = {ev.job_id for ev in scored_live[:max_live_api]}
+    filtered_live = [raw for raw in live_jobs if evaluate_job(raw, config).job_id in top_live_ids]
 
-    # Keep top max_total records matching scored job_ids
-    kept_ids = {ev.job_id for ev in scored[:max_total]}
+    combined_raw = seed_jobs + filtered_live
+    scored_all = deduplicate_and_score(combined_raw, config)
+    kept_ids = {ev.job_id for ev in scored_all}
+
     by_id: dict[str, dict[str, Any]] = {}
     for raw in combined_raw:
         ev = evaluate_job(raw, config)

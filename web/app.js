@@ -69,7 +69,7 @@
 
   function termPresent(term, textLower) {
     const t = term.toLowerCase();
-    if (t.length <= 5 && /^[a-z]+$/.test(t)) {
+    if (/^[a-z]+$/.test(t)) {
       const re = new RegExp(`\\b${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
       return re.test(textLower);
     }
@@ -87,8 +87,16 @@
     const combined = `${title} ${company} ${location} ${workMode} ${desc}`;
     const lowered = combined.toLowerCase();
 
+    const titleLower = title.toLowerCase();
+    const titleRejectHits = (cfg.title_reject_terms || []).filter(t => termPresent(t, titleLower));
     const hardHits = (cfg.hard_reject_keywords || []).filter(t => termPresent(t, lowered));
-    const rejectedReason = hardHits.length ? `Domain mismatch (${hardHits.slice(0, 3).join(", ")})` : null;
+    let rejectedReason = null;
+    if (titleRejectHits.length) {
+      rejectedReason = `Title mismatch (${titleRejectHits.slice(0, 2).join(", ")})`;
+    } else if (hardHits.length) {
+      rejectedReason = `Domain mismatch (${hardHits.slice(0, 3).join(", ")})`;
+    }
+    const titleAllowHits = (cfg.title_allow_terms || []).filter(t => termPresent(t, titleLower));
 
     const rules = cfg.interview_risk_rules || {};
     const triggers = [];
@@ -158,6 +166,8 @@
     logPts = Math.min(25, logPts);
 
     let score = Math.max(opsRatio, aiRatio) * 40 + Math.min(opsRatio, aiRatio) * 15 + domPts + logPts;
+    if (titleAllowHits.length) score += 8;
+    else score = Math.max(0, score - 20);
     if (rejectedReason) score = Math.min(score, 15);
     else if (salaryOk === false) score = Math.max(0, score - 25);
     if (interviewRisk === "HIGH") score = Math.max(0, score - 20);

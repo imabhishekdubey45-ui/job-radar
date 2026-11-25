@@ -153,6 +153,42 @@ class ScorerTestCase(unittest.TestCase):
         ev2 = evaluate_job(caresource, self.config)
         self.assertEqual(ev2.location_bucket, "Remote-India")
 
+    def test_irrelevant_dev_fde_ae_titles_rejected_and_international_ops_kept(self) -> None:
+        bad_roles = [
+            ("Web Developer", "Novaspace", "Build ecommerce automation workflow with API and AI."),
+            ("Forward Deployed Engineer", "Intercom", "Deploy AI workflows and customer operations automation."),
+            ("Core Account Executive - France", "Samsara", "Manage CRM, Salesforce onboarding, and B2B SaaS quota."),
+        ]
+        for title, company, desc in bad_roles:
+            ev = evaluate_job({"title": title, "company": company, "description": desc, "url": "https://ex.com"}, self.config)
+            self.assertIsNotNone(ev.rejected_reason, f"{title} must be rejected")
+            self.assertLessEqual(ev.fit_score, 15.0)
+
+        intl_ops = evaluate_job(
+            {
+                "title": "International Operations Lead",
+                "company": "GlobalOps",
+                "location": "Remote",
+                "description": "Lead internal workflow automation, SOPs, and SLA process improvement.",
+                "url": "https://ex.com/intl",
+            },
+            self.config,
+        )
+        self.assertIsNone(intl_ops.rejected_reason)
+        self.assertGreaterEqual(intl_ops.fit_score, 65.0)
+
+        kaam = evaluate_job(
+            {
+                "title": "Manager – Business Development & Operations (Founders Office)",
+                "company": "Kaam.com",
+                "location": "Mumbai",
+                "description": "Operations and Claude AI workflows with Founder.",
+                "url": "https://ex.com/kaam",
+            },
+            self.config,
+        )
+        self.assertIsNone(kaam.rejected_reason)
+
 
 if __name__ == "__main__":
     unittest.main()

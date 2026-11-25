@@ -62,6 +62,30 @@
       "saas", "b2b", "client solutions", "revenue operations", "revops", "product operations"
     ]
   },
+  "title_allow_terms": [
+    "operations", "ops", "process", "excellence", "improvement", "workflow",
+    "automation", "ai deployment", "ai enablement", "founder's office",
+    "founders office", "founder's special", "chief of staff", "implementation",
+    "onboarding", "enablement", "revops", "revenue operations", "sales operations",
+    "marketing operations", "catalog", "marketplace", "e-commerce", "ecommerce",
+    "adtech", "content & data", "strategic initiatives", "deployment strategist",
+    "business analyst"
+  ],
+  "title_reject_terms": [
+    "engineer", "developer", "programmer", "architect", "devops", "sre",
+    "qa ", "tester", "technician", "technicien", "data scientist", "technical lead",
+    "account executive", "sales representative", "sales executive", "sdr", "bdr",
+    "business development manager", "business development representative",
+    "customer acquisition", "account manager", "designer", "copywriter",
+    "brand ", "marketing manager", "seo", "video", "legal", "counsel",
+    "attorney", "accountant", "accounts payable", "account payable", "payroll",
+    "recruiter", "talent acquisition", "receptionist", "office manager",
+    "warehouse", "entry level", "no experience", "complaints", "customer service",
+    "call center", "internship", "intern", "h/f", "(german)", "(french)",
+    "(italian)", "(spanish)", "(dutch)", "- france", "- italy", "- germany",
+    "security operations", "detection engineering", "customer success manager",
+    "product manager", "product owner", "military", "defense", "clinical"
+  ],
   "hard_reject_keywords": [
     "ts/sci", "security clearance", "vxlan", "evpn", "ccie", "bgp", "ospf",
     "spanning tree", "network engineer", "sales engineer", "cold calling",

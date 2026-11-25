@@ -189,8 +189,7 @@ def evaluate_interview_safety(combined_text: str, config: dict[str, Any]) -> tup
 
 def _term_present(term: str, text_lower: str) -> bool:
     escaped = re.escape(term.lower())
-    # Word boundary for short alphabetic terms like 'sql', 'brd', 'dsa', 'ai'
-    if len(term) <= 5 and term.isalpha():
+    if term.isalpha():
         return bool(re.search(rf"\b{escaped}\b", text_lower))
     return term.lower() in text_lower
 
@@ -284,11 +283,21 @@ def evaluate_job(raw: dict[str, Any], config: dict[str, Any] | None = None) -> J
     elif re.search(r"\bb\.?e\.?/b\.?tech\b", lowered) or (re.search(r"\bmba\b", lowered) and "preferred" in lowered):
         education_warning = "JD prefers/notes B.Tech or MBA (verify flexibility)"
 
-    # Hard rejection check (e.g. Acme network sales engineer / TS/SCI / Java dev)
+    # Hard title + domain rejection check (blocks Web Developer, Forward Deployed Engineer, Account Executive, Acme)
+    title_lower = title.lower()
+    title_reject_hits = [
+        term for term in cfg.get("title_reject_terms", []) if _term_present(term, title_lower)
+    ]
     hard_hits = [term for term in cfg.get("hard_reject_keywords", []) if _term_present(term, lowered)]
     rejected_reason: str | None = None
-    if hard_hits:
+    if title_reject_hits:
+        rejected_reason = f"Title mismatch ({', '.join(title_reject_hits[:2])})"
+    elif hard_hits:
         rejected_reason = f"Domain mismatch ({', '.join(hard_hits[:3])})"
+
+    title_allow_hits = [
+        term for term in cfg.get("title_allow_terms", []) if _term_present(term, title_lower)
+    ]
 
     interview_risk, risk_triggers = evaluate_interview_safety(combined, cfg)
 
@@ -328,6 +337,10 @@ def evaluate_job(raw: dict[str, Any], config: dict[str, Any] | None = None) -> J
 
     log_pts = round(min(25.0, logistics_score), 1)
     raw_score = primary_pts + secondary_pts + dom_pts + log_pts
+    if title_allow_hits:
+        raw_score += 8.0
+    else:
+        raw_score = max(0.0, raw_score - 20.0)
 
     if rejected_reason:
         raw_score = min(raw_score, 15.0)
