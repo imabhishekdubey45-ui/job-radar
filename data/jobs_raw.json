@@ -539,23 +539,23 @@
     "url": "https://www.glassdoor.co.in/job-listing/epp-analyst-supplier-onboarding-boston-consulting-group-JV_IC2921225_KO0,31_KE32,55.htm?jl=1010335310885"
   },
   {
-    "job_id": "arbeitnow_founding-deployment-strategist-london-93387",
+    "job_id": "arbeitnow_product-operations-manager-paris-263003",
     "source": "arbeitnow",
-    "title": "Founding Deployment Strategist",
-    "company": "True Talent Solutions Partners",
-    "location": "London",
+    "title": "Product Operations Manager",
+    "company": "Mistral.ai",
+    "location": "Paris",
     "work_mode": "Overseas Visa-Sponsored",
     "experience_text": "",
     "salary_text": null,
     "posted_text": "Live API",
     "skills_listed": [
-      "Client Roles"
+      "Product"
     ],
-    "description": "About the Role Join an early-stage AI company building tools that help commercial insurance brokers automate submission intake, data extraction, insurer outreach, and quote comparison. As the first dedicated deployment hire, you will bring the product into broker firms and help shape the repeatable deployment approach as the team grows. What You'll Do Lead deployments from kickoff and workflow shadowing through configuration, user acceptance testing, live use, and sponsor readouts. Work with broker teams to understand how renewals move through their daily workflows and configure AI agents to support them. Manage client communication, data gathering, stakeholder alignment, and delivery gates across active pilots. Build trust with branch managers, compliance teams, and other senior stakeholders while serving as the on-site face of the product. Translate field learnings and complex business workflows into product requirements and a scalable deployment playbook. Convert successful pilots into broader deployments and identify opportunities to expand use across additional business lines. As the company grows, help build the deployment team and operating practices. What We're Looking For Two to six years of experience in enterprise software deployment or implementation, consulting, investment banking, or a forward-deployed role at a high-growth startup. Experience implementing software in large enterprises, managing senior stakeholders, and winning over skeptical clients. Comfort owning one or two active pilot deployments in parallel, including non-engineering delivery work. Strong problem-solving skills and a track record of taking projects from an ambiguous starting point to live use. Power-user experience with Claude, with experience building AI demos or prototypes using tools such as Claude or Cursor. Ability to translate business workflows into clear product requirements for engineering teams. A bachelor's degree, ideally in science, engineering, or mathematics; experience in commercial insurance or with broker workflows is useful but not required. Compensation & Benefits Salary range: £70,000 to £150,000. Visa sponsorship is available. Location On-site in London, United Kingdom. Compensation: £70K – £150K • £70K – £150K Find Jobs in United Kingdom on Arbeitnow",
-    "url": "https://www.arbeitnow.co.uk/jobs/companies/true-talent-solutions-partners/founding-deployment-strategist-london-93387"
+    "description": "About Mistral Mistral provides full-stack AI solutions: from frontier models to developer tools, applications, and compute. We partner with enterprises tackling the hardest problems across high-stakes industries like finance, manufacturing, defense, healthcare, and the public sector, co-creating customized AI systems that they can run on their terms. We are a dynamic, collaborative team passionate about AI and its potential to transform society. Our diverse workforce thrives in competitive environments and is committed to driving innovation. Our teams are distributed between Europe, North America, Asia and the Middle East. We are creative, low-ego and team-spirited. Role summary We are expanding our Product Operations function to help our product organisation scale. As a Product Operations Manager, you will design processes, tools and data infrastructure that improve alignment between Product, Engineering and Go‑To‑Market teams. You will enable seamless collaboration, accelerate feedback loops and coordinate launches, reporting to Gianna Lengyel. The role is based in Paris with a global scope. What you will do Drive data and analytics – Ensure transparent reporting on customer engagements and product usage; work with Data Science to develop dashboards and insights for product decisions. Manage feedback loops and discovery – Build structured processes to collect and analyse product feedback; run early access programmes and design partner tests. Coordinate launches – Orchestrate product releases and enterprise launches, aligning product managers, marketers, engineers and legal teams. Build product rituals – Shape planning, review and OKR routines; introduce tooling to streamline documentation and knowledge sharing. Maintain product catalogue and documentation – Partner with technical writers to keep documentation current and accessible. Standardise release cycles – Coordinate with Engineering and Science teams to manage release timelines and ensure reliability. About you 5+ years in product operations, product management or strategy/operations roles (e.g., chief of staff, consulting) in deep‑tech or AI environments. Comfortable working with data and analytics; able to turn usage data and feedback into actionable insights. Strong cross‑functional collaborator; experienced in aligning product, engineering, marketing and sales teams around shared priorities. Process‑oriented mindset; skilled at building repeatable workflows and release processes. Excellent comm",
+    "url": "https://www.arbeitnow.fr/jobs/companies/mistralai/product-operations-manager-paris-263003"
   },
   {
-    "job_id": "himalayas_447422241",
+    "job_id": "himalayas_848192331",
     "source": "himalayas",
     "title": "Operations Manager",
     "company": "Syd Life AI",
@@ -577,7 +577,7 @@
     "url": "https://himalayas.app/companies/syd-life-ai/jobs/operations-manager?utm_source=api"
   },
   {
-    "job_id": "himalayas_426783678",
+    "job_id": "himalayas_880858220",
     "source": "himalayas",
     "title": "Recruiting Operations Analyst",
     "company": "Spotter Labs",
@@ -597,7 +597,7 @@
     "url": "https://himalayas.app/companies/spotter-labs/jobs/recruiting-operations-analyst?utm_source=api"
   },
   {
-    "job_id": "himalayas_859672475",
+    "job_id": "himalayas_524599365",
     "source": "himalayas",
     "title": "Operations Director, Payments",
     "company": "Sporty Group",
@@ -618,7 +618,7 @@
     "url": "https://himalayas.app/companies/sporty-group/jobs/operations-director-payments?utm_source=api"
   },
   {
-    "job_id": "himalayas_408985645",
+    "job_id": "himalayas_144153108",
     "source": "himalayas",
     "title": "AI Automation Expert (n8n / Make / Zapier / AI Agents)",
     "company": "Kreative Media",
