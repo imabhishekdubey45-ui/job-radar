@@ -1,12 +1,15 @@
 {
-  "last_refreshed_utc": "2026-11-25 16:58 UTC",
-  "last_refreshed_ist": "25 Nov 2026, 10:28 PM IST",
-  "total_jobs": 31,
-  "live_fetched_count": 5,
+  "last_refreshed_utc": "2026-11-26 15:04 UTC",
+  "last_refreshed_ist": "26 Nov 2026, 08:34 PM IST",
+  "total_jobs": 37,
+  "live_fetched_count": 11,
   "seed_count": 26,
   "source_status": {
-    "arbeitnow": "ok (1/42 relevant)",
+    "arbeitnow": "ok (2/63 relevant)",
     "himalayas": "ok (4/32 relevant)",
-    "jobicy": "ok (0/87 relevant)"
+    "jobicy": "ok (0/65 relevant)",
+    "remotive": "ok (0/8 relevant)",
+    "greenhouse": "ok (3/55 across 3 boards)",
+    "ashby": "ok (2/20 across 4 boards)"
   }
 }

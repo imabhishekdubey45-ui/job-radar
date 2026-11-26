@@ -15,8 +15,11 @@ from fetch_jobs import (  # noqa: E402
     fetch_all_sources,
     filter_relevant_live_jobs,
     normalize_arbeitnow,
+    normalize_ashby,
+    normalize_greenhouse,
     normalize_himalayas,
     normalize_jobicy,
+    normalize_remotive,
     strip_html,
 )
 from scorer import load_config  # noqa: E402
@@ -174,6 +177,65 @@ class FetcherAndPagesTestCase(unittest.TestCase):
         self.assertIn("skipped", log["arbeitnow"])
         self.assertIn("ok", log["himalayas"])
         self.assertIn("skipped", log["jobicy"])
+
+    def test_normalize_greenhouse_ashby_and_remotive_india_eligibility(self) -> None:
+        gh = {
+            "jobs": [
+                {
+                    "id": 1,
+                    "title": "Manager, Revenue Operations",
+                    "location": {"name": "Bangalore, India"},
+                    "absolute_url": "https://boards.greenhouse.io/smartsheet/jobs/1",
+                    "content": "<p>Lead RevOps workflows, CRM automation, and SLA governance.</p>",
+                },
+                {
+                    "id": 2,
+                    "title": "Manager, Operations",
+                    "location": {"name": "Bellevue, WA, USA"},
+                    "absolute_url": "https://boards.greenhouse.io/smartsheet/jobs/2",
+                    "content": "<p>Manage US office operations.</p>",
+                },
+            ]
+        }
+        gh_norm = normalize_greenhouse(gh, "Smartsheet", "smartsheet")
+        self.assertEqual(len(gh_norm), 1)
+        self.assertEqual(gh_norm[0]["location"], "Bangalore, India")
+
+        ashby = {
+            "jobs": [
+                {
+                    "id": "a1",
+                    "title": "Operations Specialist",
+                    "location": "Remote, India",
+                    "isRemote": True,
+                    "jobUrl": "https://jobs.ashbyhq.com/certifyos/a1",
+                    "descriptionPlain": "Manage onboarding workflows, SOPs, and automation.",
+                }
+            ]
+        }
+        self.assertEqual(len(normalize_ashby(ashby, "CertifyOS", "certifyos")), 1)
+
+        rem = {
+            "jobs": [
+                {
+                    "id": 99,
+                    "title": "Operations & Process Lead",
+                    "company_name": "RemoteScale",
+                    "candidate_required_location": "Worldwide",
+                    "url": "https://remotive.com/99",
+                    "description": "<p>Optimize process workflows and automation.</p>",
+                },
+                {
+                    "id": 100,
+                    "title": "Operations Lead",
+                    "company_name": "USOnly",
+                    "candidate_required_location": "USA Only",
+                    "url": "https://remotive.com/100",
+                    "description": "<p>US operations.</p>",
+                },
+            ]
+        }
+        self.assertEqual(len(normalize_remotive(rem)), 1)
 
     def test_build_pages_site_outputs_privacy_safe_pwa(self) -> None:
         docs_dir = build_pages_site()

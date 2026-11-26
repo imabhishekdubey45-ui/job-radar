@@ -31,10 +31,32 @@ JOBICY_URLS = (
     "https://jobicy.com/api/v2/remote-jobs?count=50&geo=anywhere",
     "https://jobicy.com/api/v2/remote-jobs?count=50&geo=apac",
 )
+REMOTIVE_URL = "https://remotive.com/api/remote-jobs?search=operations"
+
+# Verified public company ATS boards (no auth, works reliably inside GitHub Actions)
+GREENHOUSE_BOARDS = (
+    ("smartsheet", "Smartsheet"),
+    ("razorpay", "Razorpay"),
+    ("browserstack", "BrowserStack"),
+    ("postman", "Postman"),
+    ("chargebee", "Chargebee"),
+    ("hubspot", "HubSpot"),
+    ("karbon", "Karbon"),
+    ("gitlab", "GitLab"),
+)
+ASHBY_BOARDS = (
+    ("certifyos", "CertifyOS"),
+    ("levelai", "Level AI"),
+    ("n8n", "n8n"),
+    ("deel", "Deel"),
+    ("zapier", "Zapier"),
+)
+GREENHOUSE_URL = "https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true"
+ASHBY_URL = "https://api.ashbyhq.com/posting-api/job-board/{token}?includeCompensation=true"
 
 USER_AGENT = "JobRadarBot/1.0 (+https://github.com)"
 
-ELIGIBLE_GEO_TOKENS = ("worldwide", "anywhere", "global", "india", "apac", "asia", "all regions")
+ELIGIBLE_GEO_TOKENS = ("worldwide", "anywhere", "global", "india", "apac", "asia", "all regions", "bengaluru", "bangalore", "mumbai", "pune", "ahmedabad", "delhi", "gurgaon", "gurugram", "hyderabad", "noida", "chennai")
 
 
 def strip_html(raw_html: str | None) -> str:
@@ -209,6 +231,125 @@ def normalize_jobicy(payload: dict[str, Any]) -> list[dict[str, Any]]:
     return out
 
 
+def normalize_remotive(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    """Normalize Remotive remote jobs API response."""
+    records = payload.get("jobs") if isinstance(payload, dict) else []
+    if not isinstance(records, list):
+        return []
+    out: list[dict[str, Any]] = []
+    for item in records:
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title") or "").strip()
+        url = str(item.get("url") or "").strip()
+        if not title or not url:
+            continue
+        geo = str(item.get("candidate_required_location") or "Worldwide").strip()
+        if not _is_geo_eligible(geo):
+            continue
+        desc = strip_html(item.get("description"))
+        tags = [str(t) for t in (item.get("tags") or []) if t]
+        out.append(
+            {
+                "job_id": f"remotive_{item.get('id') or abs(hash(url)) % 10**8}",
+                "source": "remotive",
+                "title": title,
+                "company": str(item.get("company_name") or "Remote Company").strip(),
+                "location": f"Remote ({geo})",
+                "work_mode": "Remote",
+                "experience_text": "",
+                "salary_text": str(item.get("salary") or "").strip() or None,
+                "posted_text": str(item.get("publication_date") or "Recent")[:10],
+                "skills_listed": tags[:8],
+                "description": desc[:2500],
+                "url": url,
+            }
+        )
+    return out
+
+
+def normalize_greenhouse(payload: dict[str, Any], company_name: str, board_token: str) -> list[dict[str, Any]]:
+    """Normalize Greenhouse public job-board JSON API."""
+    records = payload.get("jobs") if isinstance(payload, dict) else []
+    if not isinstance(records, list):
+        return []
+    out: list[dict[str, Any]] = []
+    for item in records:
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title") or "").strip()
+        url = str(item.get("absolute_url") or "").strip()
+        if not title or not url:
+            continue
+        loc_obj = item.get("location") or {}
+        loc = str(loc_obj.get("name") or "").strip() if isinstance(loc_obj, dict) else str(loc_obj)
+        desc = strip_html(item.get("content"))
+        has_visa = any(k in desc.lower() for k in ("visa sponsor", "relocation package", "relocation support"))
+        if not _is_geo_eligible(loc, has_visa_sponsor=has_visa):
+            continue
+        work_mode = "Remote" if "remote" in loc.lower() else ("Overseas Visa-Sponsored" if has_visa and "india" not in loc.lower() else "India Hub / Hybrid")
+        out.append(
+            {
+                "job_id": f"gh_{board_token}_{item.get('id') or abs(hash(url)) % 10**8}",
+                "source": "greenhouse",
+                "title": title,
+                "company": company_name,
+                "location": loc or "India / Remote",
+                "work_mode": work_mode,
+                "experience_text": "",
+                "salary_text": None,
+                "posted_text": str(item.get("updated_at") or "Recent")[:10],
+                "skills_listed": [],
+                "description": desc[:2500],
+                "url": url,
+            }
+        )
+    return out
+
+
+def normalize_ashby(payload: dict[str, Any], company_name: str, board_token: str) -> list[dict[str, Any]]:
+    """Normalize Ashby public job-board JSON API."""
+    records = payload.get("jobs") if isinstance(payload, dict) else []
+    if not isinstance(records, list):
+        return []
+    out: list[dict[str, Any]] = []
+    for item in records:
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title") or "").strip()
+        url = str(item.get("jobUrl") or item.get("applyUrl") or "").strip()
+        if not title or not url:
+            continue
+        loc = str(item.get("location") or "").strip()
+        sec_locs = [str(x.get("location") or "") for x in (item.get("secondaryLocations") or []) if isinstance(x, dict)]
+        combined_loc = ", ".join([loc, *sec_locs]).strip(", ")
+        is_remote = bool(item.get("isRemote"))
+        desc = strip_html(item.get("descriptionPlain") or item.get("descriptionHtml"))
+        has_visa = any(k in desc.lower() for k in ("visa sponsor", "relocation package", "relocation support"))
+        geo_probe = combined_loc or ("Worldwide" if is_remote else "")
+        if not _is_geo_eligible(geo_probe, has_visa_sponsor=has_visa):
+            continue
+        comp = item.get("compensation") or {}
+        sal_text = str(comp.get("compensationTierSummary") or "").strip() or None if isinstance(comp, dict) else None
+        out.append(
+            {
+                "job_id": f"ashby_{board_token}_{item.get('id') or abs(hash(url)) % 10**8}",
+                "source": "ashby",
+                "title": title,
+                "company": company_name,
+                "location": combined_loc or ("Remote" if is_remote else "Global"),
+                "work_mode": "Remote" if is_remote else "Onsite / Hybrid",
+                "experience_text": "",
+                "salary_text": sal_text,
+                "posted_text": str(item.get("publishedAt") or "Recent")[:10],
+                "skills_listed": [str(item.get("department") or "").strip()] if item.get("department") else [],
+                "description": desc[:2500],
+                "url": url,
+            }
+        )
+    return out
+
+
 def _looks_english(text: str) -> bool:
     lowered = f" {text.lower()} "
     english_markers = (" and ", " the ", " with ", " for ", " to ", " in ", " of ")
@@ -289,6 +430,46 @@ def fetch_all_sources(config: dict[str, Any]) -> tuple[list[dict[str, Any]], dic
         status_log["jobicy"] = f"ok ({len(kept)}/{len(jcy_norm)} relevant)"
     else:
         status_log["jobicy"] = f"skipped ({'; '.join(jcy_errors[:1]) or 'no data'})"
+
+    try:
+        rem_norm = normalize_remotive(_http_get_json(REMOTIVE_URL))
+        kept = filter_relevant_live_jobs(rem_norm, config)
+        collected.extend(kept)
+        status_log["remotive"] = f"ok ({len(kept)}/{len(rem_norm)} relevant)"
+    except Exception as exc:
+        status_log["remotive"] = f"skipped ({exc})"
+
+    gh_norm: list[dict[str, Any]] = []
+    gh_ok_boards = 0
+    for token, cname in GREENHOUSE_BOARDS:
+        try:
+            items = normalize_greenhouse(_http_get_json(GREENHOUSE_URL.format(token=token)), cname, token)
+            gh_norm.extend(items)
+            gh_ok_boards += 1
+        except Exception:
+            continue
+    if gh_ok_boards:
+        kept = filter_relevant_live_jobs(gh_norm, config)
+        collected.extend(kept)
+        status_log["greenhouse"] = f"ok ({len(kept)}/{len(gh_norm)} across {gh_ok_boards} boards)"
+    else:
+        status_log["greenhouse"] = "skipped (no reachable boards)"
+
+    ash_norm: list[dict[str, Any]] = []
+    ash_ok_boards = 0
+    for token, cname in ASHBY_BOARDS:
+        try:
+            items = normalize_ashby(_http_get_json(ASHBY_URL.format(token=token)), cname, token)
+            ash_norm.extend(items)
+            ash_ok_boards += 1
+        except Exception:
+            continue
+    if ash_ok_boards:
+        kept = filter_relevant_live_jobs(ash_norm, config)
+        collected.extend(kept)
+        status_log["ashby"] = f"ok ({len(kept)}/{len(ash_norm)} across {ash_ok_boards} boards)"
+    else:
+        status_log["ashby"] = "skipped (no reachable boards)"
 
     # Deduplicate across overlapping search queries (e.g. multiple Himalayas queries)
     deduped: list[dict[str, Any]] = []
